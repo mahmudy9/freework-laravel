@@ -15,7 +15,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'name', 'email', 'password', 'phone' , 'address' , 'city'
     ];
 
     /**
@@ -26,4 +26,51 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token',
     ];
+
+
+    public function hasRole($role)
+    {
+        if($this->roles()->where('name' , $role)->first())
+        {
+            return true;
+        }
+        return false;
+    }
+
+
+    public function roles()
+    {
+        return $this->belongsToMany( 'App\Role' , 'role_user' , 'user_id' , 'role_id');
+    }
+
+
+    public function jobs()
+    {
+        return $this->hasMany( 'App\Job' ,'user_id');
+    }
+
+
+    public function contacts()
+    {
+        return $this->hasMany('App\Contact' , 'user_id');
+    }
+
+
+    public function requests()
+    {
+        return $this->hasMany('App\Request' , 'freelancer_id');
+    }
+
+
+    public function posts()
+    {
+        return $this->hasMany('App\Post' , 'user_id');
+    }
+
+
+    public function comments()
+    {
+        return $this->hasMany('App\Comment' , 'user_id');
+    }
+
 }
