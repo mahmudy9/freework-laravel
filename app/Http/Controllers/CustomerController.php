@@ -31,7 +31,7 @@ class CustomerController extends Controller
     public function store_register(Request $request)
     {
         $validator = Validator::make($request->all() , [
-            'email' => 'email|required',
+            'email' => 'email|required|unique:users,email',
             'name' => 'required|min:3|max:100',
             'password' => 'required|min:6|max:100|confirmed',
             'address' => 'required|min:8|max:200',
@@ -70,7 +70,8 @@ class CustomerController extends Controller
     {
         if($request->hasFile('image'))
         {
-            $path = $request->file('image')->store('public/img');
+            $path = $request->file('image')->store('public/storage/img');
+            
             $file = pathinfo( $path , PATHINFO_BASENAME );
         }
 
@@ -78,8 +79,16 @@ class CustomerController extends Controller
             'title' => 'required|min:5|max:255',
             'image' => 'required|image|max:1999',
             'description' => 'required|min:10|max:1000',
-            'phone' => 'required|numeric|min:9|max:30'
+            'phone' => 'required|numeric|min:9'
         ]);
+
+        if($validator->fails())
+        {
+            return redirect()
+            ->back()
+            ->withErrors($validator)
+            ->withInput();
+        }
 
         $job = new Job;
         $job->user_id = Auth::id();
@@ -92,6 +101,29 @@ class CustomerController extends Controller
         return redirect()->back();
     }
 
+
+    public function delete_job($id)
+    {
+        $job = Job::find($id);
+        if($job->user_id != Auth::id())
+        {
+            return response()->json([] , 400);
+        }
+
+        $requests = Req::where('job_id' , $job->id);
+        $reqs = $requests->get(['status']);
+        foreach($reqs as $req)
+        {
+            if($req->status == 1)
+            {
+                return response()->json([] , 400);
+ 
+            }
+        }
+        $job->delete();
+        $requests->delete();
+        return response()->json([] , 200);
+    }
 
     public function edit_job($id)
     {
@@ -118,11 +150,11 @@ class CustomerController extends Controller
             $file = pathinfo($path , PATHINFO_BASENAME);
         }
 
-        $validator = Valdiator::make($request->all() , [
+        $validator = Validator::make($request->all() , [
             'title' => 'required|min:5|max:255',
             'image' => 'image|max:1999',
             'description' => 'required|min:10|max:1000',
-            'phone' => 'required|numeric|min:9|max:30'
+            'phone' => 'required|numeric|min:9'
         ]);
 
         if($validator->fails())
@@ -135,7 +167,7 @@ class CustomerController extends Controller
         $job->title = $request->input('title');
         $job->description = $request->input('description');
         $job->phone = $request->input('phone');
-        if($file)
+        if(isset($file))
         {
             $job->image = $file;
         }
@@ -152,12 +184,12 @@ class CustomerController extends Controller
         $job = Job::find($job_id);
         if($job->user_id != Auth::id())
         {
-            return response()->json([] , 404);
+            return abort(404);
         }
-
+        //status = 1 means accepted
         $req->status = 1;
         $req->save();
-        return response()->json([] , 200);
+        return redirect()->back();
     }
 
 
@@ -170,7 +202,7 @@ class CustomerController extends Controller
         {
             return response()->json([] , 404);
         }
-
+        //status = 2 means its refused
         $req->status = 2;
         $req->save();
         return response()->json([] , 200);
@@ -178,10 +210,49 @@ class CustomerController extends Controller
     }
 
 
+    public function undo_request($id)
+    {
+        $request = Req::find($id);
+        $job_id = $request->job_id;
+        $job = Job::find($job_id);
+        if($job->user_id != Auth::id())
+        {
+            return abort(404);
+        }
+        $request->status = 2;
+        $request->save();
+        return redirect()->back();
+    }
+
+
     public function myjobs()
     {
-        $jobs = Job::where('user_id' , Auth::id())->get();
+        $jobs = Job::where('user_id' , Auth::id())->latest()->paginate(10);
         return view('customer.myjobs' , compact('jobs'));
+    }
+
+
+    public function job($id)
+    {
+        
+        $job = Job::find($id);
+        if($job->user_id != Auth::id())
+        {
+            return abort(404);
+        }
+
+        if(Req::where(['job_id' => $id , 'status' => 1 ])->exists())
+        {
+            $res = 0;
+            $req = Req::where(['job_id' => $id , 'status' => 1])->first();
+        }
+        else
+        {
+            $res = 1;
+        }
+        $requests = Req::where(['job_id' => $id , 'status' => 0 ])->paginate('10');
+
+        return view('customer.job' , compact('job' , 'requests' , 'req' ,'res'));
     }
 
 
@@ -207,11 +278,11 @@ class CustomerController extends Controller
     public function update_profile(Request $request )
     {
         $validator = Validator::make($request->all() , [
-            'email' => 'email|required',
-            'name' => 'required|min:3|max:100',
-            'address' => 'required|min:8|max:200',
-            'city' => 'required|min:5|max:100',
-            'phone' => 'required|min:9|max:100|numeric'
+            'email' => 'email|required|unique:users,email',
+            'name' => 'required|min:3',
+            'address' => 'required|min:8',
+            'city' => 'required|min:5',
+            'phone' => 'required|min:9|numeric'
         ]);
         if($validator->fails())
         {
@@ -230,9 +301,7 @@ class CustomerController extends Controller
         return redirect()->back();
 
     }
-
-
-
+ 
     
 
 

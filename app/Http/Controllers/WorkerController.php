@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 use App\User;
 use App\Role;
 use Validator;
+use App\Request as Req;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class WorkerController extends Controller
 {
@@ -27,7 +29,7 @@ class WorkerController extends Controller
     public function store_register(Request $request)
     {
         $validator = Validator::make($request->all() , [
-            'email' => 'email|required',
+            'email' => 'email|required|unique:users,email',
             'name' => 'required|min:3|max:100',
             'password' => 'required|min:6|max:100|confirmed',
             'address' => 'required|min:8|max:200',
@@ -62,7 +64,7 @@ class WorkerController extends Controller
     {
         if(Req::where([ 'job_id' => $id , 'freelancer_id' => Auth::id()])->exists())
         {
-            return response()->json([] , 404);
+            return response()->json([] , 400);
         }
         $request = new Req;
         $request->freelancer_id = Auth::id();
@@ -74,21 +76,21 @@ class WorkerController extends Controller
 
     public function my_requests()
     {
-        $requests = Req::where(['freelancer_id' => Auth::id() , 'status' => 0])->get();
+        $requests = Req::where(['freelancer_id' => Auth::id() , 'status' => 0])->paginate(15);
         return view('worker.myrequests' , compact('requests'));
     }
 
 
     public function accepted_requests()
     {
-        $requests = Req::where(['freelancer_id' => Auth::id() , 'status' => 1])->get();
+        $requests = Req::where(['freelancer_id' => Auth::id() , 'status' => 1])->paginate(15);
         return view('worker.acceptedrequests' , compact('requests'));
     }
 
 
     public function refused_requests()
     {
-        $requests = Req::where(['freelancer_id' => Auth::id() , 'status' => 2])->get();
+        $requests = Req::where(['freelancer_id' => Auth::id() , 'status' => 2])->paginate(15);
         return view('worker.refusedrequests' , compact('requests'));
     }
 
@@ -96,7 +98,7 @@ class WorkerController extends Controller
     public function cancel_request($id)
     {
         $request = Req::where(['freelancer_id' => Auth::id() , 'job_id' => $id])->first();
-        if($request->status == 1)
+        if($request->status == 1 || $request->status == 2)
         {
             return response()->json([] , 404);
         }
@@ -114,12 +116,13 @@ class WorkerController extends Controller
 
     public function update_profile(Request $request)
     {
-        $validator = Validator::make($request->all() , [
-            'email' => 'email|required',
-            'name' => 'required|min:3|max:100',
-            'address' => 'required|min:8|max:200',
-            'city' => 'required|min:5|max:100',
-            'phone' => 'required|min:9|max:100|numeric'
+        $validator = Validator::make($request->all() , 
+        [
+            'email' => 'email|required|unique:users,email',
+            'name' => 'required|min:3',
+            'address' => 'required|min:8',
+            'city' => 'required|min:5',
+            'phone' => 'required|min:9|numeric'
         ]);
         if($validator->fails())
         {

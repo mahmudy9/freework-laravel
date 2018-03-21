@@ -12,14 +12,14 @@
 
     <div class="form-group col-md-12">
       <label for="inputEmail4">Worker Email</label>
-      <input type="email" name="email" class="form-control" id="inputEmail4" placeholder="Worker Email" required>
+      <input type="email" name="email" value="{{old('email')}}" class="form-control" id="inputEmail4" placeholder="Worker Email" required>
     </div>
 </div>
 
   <div class="form-row">
       <div class="form-group col-md-12">
       <label for="inputEmail4">Worker Name</label>
-      <input type="text" name="name" class="form-control" id="inputEmail4" placeholder="Worker Name" required>
+      <input type="text" name="name" class="form-control" value="{{old('name')}}" id="inputEmail4" placeholder="Worker Name" required>
     </div>
 
     <div class="form-group col-md-6">
@@ -35,16 +35,16 @@
   </div>
   <div class="form-group">
     <label for="inputAddress">Address</label>
-    <input type="text" name="address" class="form-control" id="inputAddress" placeholder="1234 Main St" required>
+    <input type="text" name="address" class="form-control" id="inputAddress" value="{{old('address')}}" placeholder="1234 Main St" required>
   </div>
   <div class="form-row">
     <div class="form-group col-md-6">
       <label for="inputCity">City</label>
-      <input type="text" name="city" class="form-control" id="inputCity" required>
+      <input type="text" name="city" value="{{old('city')}}" class="form-control" id="inputCity" required>
     </div>
     <div class="form-group col-md-6">
       <label for="inputZip">Phone</label>
-      <input type="text" name="phone" class="form-control" id="inputZip" required>
+      <input type="text" name="phone" class="form-control" value="{{old('phone')}}" id="inputZip" required>
     </div>
   </div>
   <button type="submit" class="btn btn-primary">Sign Up</button>

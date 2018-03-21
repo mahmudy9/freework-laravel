@@ -20,6 +20,8 @@ class CreateJobsTable extends Migration
             $table->text('description');
             $table->string('phone');
             $table->string('image');
+            $table->tinyInteger('approved')->default(0);
+            $table->tinyInteger('seen')->default(0);
             $table->timestamps();
         });
     }
