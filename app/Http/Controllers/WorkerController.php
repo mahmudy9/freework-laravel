@@ -14,7 +14,7 @@ class WorkerController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth' , 'Worker']);
+        $this->middleware(['auth' , 'Worker'])->except(['register' , 'store_register']);
     }
 
 

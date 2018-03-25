@@ -16,7 +16,7 @@ class CustomerController extends Controller
     
     public function __construct()
     {
-        $this->middleware(['auth' , 'Customer']);
+        $this->middleware(['auth' , 'Customer'])->except(['register' , 'store_register']);
     }
 
 
